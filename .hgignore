@@ -1,0 +1,9 @@
+syntax: glob
+bin/**
+obj/**
+*.suo
+SparseArrayProgram/**
+SparseDataStructures.sln
+*.csproj
+App.config
+AssemblyInfo.cs
