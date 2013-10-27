@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace SparseArray
+namespace Sparse.Array3D
 {
     class Leaf<T> : INodeInternal<T>
     {
