@@ -2,7 +2,8 @@
 
 namespace Sparse.Array3D
 {
-    public class SparseArray3D<T>
+    // Encapsulates the immutable tree structure and presents a mutable object resembling a 3D array
+    public class SparseArray3D<T> : ISparseArray3D<T>
     {
         private readonly uint xLength;
         private readonly uint yLength;
@@ -10,6 +11,7 @@ namespace Sparse.Array3D
 
         private INodeInternal<T> root;
 
+        // Create a sparse array from an existing 3D array
         public SparseArray3D(T[,,] array)
         {
             this.xLength = (uint) array.GetLength(0);
@@ -30,6 +32,7 @@ namespace Sparse.Array3D
             }
         }
 
+        // Create a sparse array of the specified dimensions
         public SparseArray3D(uint xlen, uint ylen, uint zlen)
         {
             this.xLength = xlen;
@@ -39,6 +42,7 @@ namespace Sparse.Array3D
             this.root = new Leaf<T>(default(T));
         }
 
+        // Constructor-based clone method
         public SparseArray3D(SparseArray3D<T> other)
         {
             this.xLength = other.xLength;
@@ -47,7 +51,7 @@ namespace Sparse.Array3D
             this.root = other.root;
         }
 
-        public SparseArray3D<T> Clone()
+        public ISparseArray3D<T> Clone()
         {
             return new SparseArray3D<T>(this);
         }
@@ -84,6 +88,7 @@ namespace Sparse.Array3D
             }
         }
 
+        // Get a snapshot view of the tree structure.
         public INode<T> TreeSnapshot()
         {
             return new NodeView<T>(root, xLength, yLength, zLength);

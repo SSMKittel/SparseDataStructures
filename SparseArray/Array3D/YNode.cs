@@ -17,6 +17,7 @@ namespace Sparse.Array3D
         {
             uint leftLen = LeftLength(xlen, ylen, zlen);
 
+            // Choose which child to traverse down
             if (y < leftLen)
             {
                 return left.Get(xlen, leftLen, zlen, x, y, z);
@@ -37,6 +38,7 @@ namespace Sparse.Array3D
 
             uint leftLen = LeftLength(xlen, ylen, zlen);
 
+            // Choose which child to traverse down
             if (y < leftLen)
             {
                 nl = left.Set(xlen, leftLen, zlen, x, y, z, item);
@@ -50,21 +52,27 @@ namespace Sparse.Array3D
 
             if (nl.IsLeaf && nr.IsLeaf)
             {
+                // Both children are leaf nodes
                 var comparer = EqualityComparer<T>.Default;
 
                 var leftItem = nl.Get(1, 1, 1, 0, 0, 0);
                 var rightItem = nr.Get(1, 1, 1, 0, 0, 0);
 
+                // Check if both leaf-children store the same value
                 if (comparer.Equals(leftItem, rightItem))
                 {
+                    // They store the same value, this node and its children should be merged into one leaf node.
+                    // Since the leaf nodes only store the value, we can just return either one of the children and have the same effect.
                     return nl;
                 }
             }
             else if (object.ReferenceEquals(nl, left) && object.ReferenceEquals(nr, right))
             {
+                // There was no change
                 return this;
             }
 
+            // One of the children changed, transfer the changes up the tree
             return new YNode<T>(nl, nr);
         }
 
