@@ -1,13 +1,13 @@
 ﻿using System.Collections.Generic;
 
-namespace SparseArray
+namespace Sparse.Array3D
 {
-    class XNode<T> : INodeInternal<T>
+    class YNode<T> : INodeInternal<T>
     {
         private readonly INodeInternal<T> left;
         private readonly INodeInternal<T> right;
 
-        public XNode(INodeInternal<T> left, INodeInternal<T> right)
+        public YNode(INodeInternal<T> left, INodeInternal<T> right)
         {
             this.left = left;
             this.right = right;
@@ -17,15 +17,15 @@ namespace SparseArray
         {
             uint leftLen = LeftLength(xlen, ylen, zlen);
 
-            if (x < leftLen)
+            if (y < leftLen)
             {
-                return left.Get(leftLen, ylen, zlen, x, y, z);
+                return left.Get(xlen, leftLen, zlen, x, y, z);
             }
             else
             {
                 uint rightLen = RightLength(xlen, ylen, zlen);
 
-                return right.Get(rightLen, ylen, zlen, x - leftLen, y, z);
+                return right.Get(xlen, rightLen, zlen, x, y - leftLen, z);
             }
         }
 
@@ -37,15 +37,15 @@ namespace SparseArray
 
             uint leftLen = LeftLength(xlen, ylen, zlen);
 
-            if (x < leftLen)
+            if (y < leftLen)
             {
-                nl = left.Set(leftLen, ylen, zlen, x, y, z, item);
+                nl = left.Set(xlen, leftLen, zlen, x, y, z, item);
             }
             else
             {
                 uint rightLen = RightLength(xlen, ylen, zlen);
 
-                nr = right.Set(rightLen, ylen, zlen, x - leftLen, y, z, item);
+                nr = right.Set(xlen, rightLen, zlen, x, y - leftLen, z, item);
             }
 
             if (nl.IsLeaf && nr.IsLeaf)
@@ -65,7 +65,7 @@ namespace SparseArray
                 return this;
             }
 
-            return new XNode<T>(nl, nr);
+            return new YNode<T>(nl, nr);
         }
 
         public bool IsLeaf
@@ -80,18 +80,18 @@ namespace SparseArray
         {
             get
             {
-                return Dimension.X;
+                return Dimension.Y;
             }
         }
 
         public uint LeftLength(uint xlen, uint ylen, uint zlen)
         {
-            return (xlen + 1) / 2;
+            return (ylen + 1) / 2;
         }
 
         public uint RightLength(uint xlen, uint ylen, uint zlen)
         {
-            return xlen - LeftLength(xlen, ylen, zlen);
+            return ylen - LeftLength(xlen, ylen, zlen);
         }
 
         public INodeInternal<T> Left

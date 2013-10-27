@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SparseArray
+namespace Sparse.Array3D
 {
     class NodeView<T> : INode<T>
     {

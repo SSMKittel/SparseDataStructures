@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SparseArray
+namespace Sparse.Array3D
 {
     public class SparseArray3D<T>
     {
@@ -17,6 +17,19 @@ namespace SparseArray
             this.zLength = zlen;
 
             this.root = new Leaf<T>(default(T));
+        }
+
+        public SparseArray3D(SparseArray3D<T> other)
+        {
+            this.xLength = other.xLength;
+            this.yLength = other.yLength;
+            this.zLength = other.zLength;
+            this.root = other.root;
+        }
+
+        public SparseArray3D<T> Clone()
+        {
+            return new SparseArray3D<T>(this);
         }
 
         private void assertBounds(uint x, uint y, uint z)
@@ -51,7 +64,7 @@ namespace SparseArray
             }
         }
 
-        public INode<T> TreeView()
+        public INode<T> TreeSnapshot()
         {
             return new NodeView<T>(root, xLength, yLength, zLength);
         }
