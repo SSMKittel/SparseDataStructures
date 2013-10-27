@@ -10,6 +10,26 @@ namespace Sparse.Array3D
 
         private INodeInternal<T> root;
 
+        public SparseArray3D(T[,,] array)
+        {
+            this.xLength = (uint) array.GetLength(0);
+            this.yLength = (uint) array.GetLength(1);
+            this.zLength = (uint) array.GetLength(2);
+
+            this.root = new Leaf<T>(default(T));
+
+            for (uint x = 0; x < xLength; x++)
+            {
+                for (uint y = 0; y < yLength; y++)
+                {
+                    for (uint z = 0; z < zLength; z++)
+                    {
+                        this[x, y, z] = array[x, y, z];
+                    }
+                }
+            }
+        }
+
         public SparseArray3D(uint xlen, uint ylen, uint zlen)
         {
             this.xLength = xlen;
