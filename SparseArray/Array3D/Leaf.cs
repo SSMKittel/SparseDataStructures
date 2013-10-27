@@ -21,12 +21,13 @@ namespace Sparse.Array3D
 
         public T Get(uint xlen, uint ylen, uint zlen, uint x, uint y, uint z)
         {
+            // Doesn't matter what the dimensions of this node is, only the value is relevant
             return item;
         }
 
+        // Create a new node split along the longest axis with leaf children of this leaf node
         public INodeInternal<T> Split(uint xlen, uint ylen, uint zlen)
         {
-            // Create a new node split along the longest axis with leaf children of this item
             if (xlen >= ylen && xlen >= zlen)
             {
                 return new XNode<T>(this, this);
@@ -53,10 +54,12 @@ namespace Sparse.Array3D
             }
             else if (xlen == 1 && ylen == 1 && zlen == 1)
             {
+                // We have exactly one position, set the new value
                 return new Leaf<T>(item);
             }
             else
             {
+                // We need to set a new value somewhere in this node.  Split this leaf node and keep trying to find a spot
                 var node = Split(xlen, ylen, zlen);
                 return node.Set(xlen, ylen, zlen, x, y, z, item);
             }

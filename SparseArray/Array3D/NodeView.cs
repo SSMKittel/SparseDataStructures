@@ -2,6 +2,7 @@
 
 namespace Sparse.Array3D
 {
+    // Provides a read-only view of the internal tree structure, hiding the length whackiness by storing them in the node and creating child nodes on-demand
     class NodeView<T> : INode<T>
     {
         private readonly INodeInternal<T> node;
@@ -25,6 +26,7 @@ namespace Sparse.Array3D
             }
         }
 
+        // Get the left node, if any
         public INode<T> Left
         {
             get
@@ -45,6 +47,7 @@ namespace Sparse.Array3D
             }
         }
 
+        // Get the right node, if any
         public INode<T> Right
         {
             get
@@ -65,6 +68,7 @@ namespace Sparse.Array3D
             }
         }
 
+        // The dimension the current node splits on.  Leaf nodes are Dimension.None
         public Dimension Slice
         {
             get
@@ -97,6 +101,7 @@ namespace Sparse.Array3D
             }
         }
 
+        // The value stored in this node, if it is a leaf node
         public T Value
         {
             get
