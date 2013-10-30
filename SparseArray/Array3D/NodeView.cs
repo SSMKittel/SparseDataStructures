@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace Sparse.Array3D
 {
@@ -18,14 +20,6 @@ namespace Sparse.Array3D
             this.zLength = zlen;
         }
 
-        public bool IsLeaf
-        {
-            get
-            {
-                return node.IsLeaf;
-            }
-        }
-
         // Get the left node, if any
         public INode<T> Left
         {
@@ -33,13 +27,13 @@ namespace Sparse.Array3D
             {
                 uint leftLength = node.LeftLength(xLength, yLength, zLength);
 
-                switch (node.Slice)
+                switch (node.Type)
                 {
-                    case Dimension.X:
+                    case NodeType.X:
                         return new NodeView<T>(node.Left, leftLength, yLength, zLength);
-                    case Dimension.Y:
+                    case NodeType.Y:
                         return new NodeView<T>(node.Left, xLength, leftLength, zLength);
-                    case Dimension.Z:
+                    case NodeType.Z:
                         return new NodeView<T>(node.Left, xLength, yLength, leftLength);
                     default:
                         return null;
@@ -54,13 +48,13 @@ namespace Sparse.Array3D
             {
                 uint rightLength = node.RightLength(xLength, yLength, zLength);
 
-                switch (node.Slice)
+                switch (node.Type)
                 {
-                    case Dimension.X:
+                    case NodeType.X:
                         return new NodeView<T>(node.Right, rightLength, yLength, zLength);
-                    case Dimension.Y:
+                    case NodeType.Y:
                         return new NodeView<T>(node.Right, xLength, rightLength, zLength);
-                    case Dimension.Z:
+                    case NodeType.Z:
                         return new NodeView<T>(node.Right, xLength, yLength, rightLength);
                     default:
                         return null;
@@ -69,11 +63,11 @@ namespace Sparse.Array3D
         }
 
         // The dimension the current node splits on.  Leaf nodes are Dimension.None
-        public Dimension Slice
+        public NodeType Type
         {
             get
             {
-                return node.Slice;
+                return node.Type;
             }
         }
 
@@ -106,7 +100,7 @@ namespace Sparse.Array3D
         {
             get
             {
-                if (node.IsLeaf == false)
+                if (node.Type == NodeType.Leaf)
                 {
                     return default(T);
                 }
@@ -117,15 +111,15 @@ namespace Sparse.Array3D
             }
         }
 
-        public uint Length(Dimension dimension)
+        public uint Length(NodeType dimension)
         {
             switch(dimension)
             {
-                case Dimension.X:
+                case NodeType.X:
                     return this.xLength;
-                case Dimension.Y:
+                case NodeType.Y:
                     return this.yLength;
-                case Dimension.Z:
+                case NodeType.Z:
                     return this.zLength;
                 default:
                     throw new ArgumentException("Not a valid dimension for length: " + dimension);
@@ -157,5 +151,41 @@ namespace Sparse.Array3D
             }
         }
 
+        private IEnumerable<INodeInternal<T>> DFS(INodeInternal<T> root)
+        {
+            yield return root;
+
+            if (root.Type != NodeType.Leaf)
+            {
+                foreach (INodeInternal<T> n in DFS(root.Left))
+                {
+                    yield return n;
+                }
+
+                foreach (INodeInternal<T> n in DFS(root.Right))
+                {
+                    yield return n;
+                }
+            }
+        }
+
+        public int CountUniqueLeaves
+        {
+            get
+            {
+                return (from n in DFS(node)
+                        where n.Type == NodeType.Leaf
+                        select n).Distinct().Count();
+            }
+        }
+        public int CountUniqueNodes
+        {
+            get
+            {
+                return (from n in DFS(node)
+                        where n.Type != NodeType.Leaf
+                        select n).Distinct().Count();
+            }
+        }
     }
 }

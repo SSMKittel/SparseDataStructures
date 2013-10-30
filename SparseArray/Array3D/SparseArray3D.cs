@@ -11,15 +11,16 @@ namespace Sparse.Array3D
 
         private INodeInternal<T> root;
 
+        private readonly INodeInternalFactory<T> nodeFactory;
+
         // Create a sparse array from an existing 3D array
-        public SparseArray3D(T[,,] array)
+        public SparseArray3D(INodeInternalFactory<T> factory, T[, ,] array)
+            : this(
+                factory,
+                (uint)array.GetLength(0),
+                (uint)array.GetLength(1),
+                (uint)array.GetLength(2))
         {
-            this.xLength = (uint) array.GetLength(0);
-            this.yLength = (uint) array.GetLength(1);
-            this.zLength = (uint) array.GetLength(2);
-
-            this.root = new Leaf<T>(default(T));
-
             for (uint x = 0; x < xLength; x++)
             {
                 for (uint y = 0; y < yLength; y++)
@@ -32,14 +33,37 @@ namespace Sparse.Array3D
             }
         }
 
-        // Create a sparse array of the specified dimensions
+        public SparseArray3D(T[, ,] array) : this(new SimpleFactory<T>(), array) { }
+
         public SparseArray3D(uint xlen, uint ylen, uint zlen)
+            : this(new SimpleFactory<T>(), xlen, ylen, zlen)
+        { }
+
+        // Create a sparse array of the specified dimensions
+        public SparseArray3D(INodeInternalFactory<T> factory, uint xlen, uint ylen, uint zlen)
         {
+            if (xlen == 0)
+            {
+                throw new ArgumentException("X dimension must be greater than zero");
+            }
+
+            if (ylen == 0)
+            {
+                throw new ArgumentException("Y dimension must be greater than zero");
+            }
+
+            if (zlen == 0)
+            {
+                throw new ArgumentException("Z dimension must be greater than zero");
+            }
+
             this.xLength = xlen;
             this.yLength = ylen;
             this.zLength = zlen;
 
-            this.root = new Leaf<T>(default(T));
+            this.nodeFactory = factory;
+
+            this.root = this.nodeFactory.Get(default(T));
         }
 
         // Constructor-based clone method
@@ -49,6 +73,7 @@ namespace Sparse.Array3D
             this.yLength = other.yLength;
             this.zLength = other.zLength;
             this.root = other.root;
+            this.nodeFactory = other.nodeFactory;
         }
 
         public ISparseArray3D<T> Clone()
@@ -84,7 +109,7 @@ namespace Sparse.Array3D
             {
                 assertBounds(x, y, z);
 
-                root = root.Set(xLength, yLength, zLength, x, y, z, value);
+                root = root.Set(nodeFactory, xLength, yLength, zLength, x, y, z, value);
             }
         }
 

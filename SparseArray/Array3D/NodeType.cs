@@ -1,8 +1,8 @@
 ﻿namespace Sparse.Array3D
 {
-    public enum Dimension
+    public enum NodeType
     {
-        None,
+        Leaf,
         X,
         Y,
         Z
