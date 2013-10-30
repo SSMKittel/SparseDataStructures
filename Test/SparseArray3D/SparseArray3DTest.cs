@@ -34,7 +34,7 @@ namespace Test
         private int[, ,] IdenticalCube(int value)
         {
             int[, ,] vals = new int[CubeLength, CubeLength, CubeLength];
-
+            
             for (int x = 0; x < CubeLength; x++)
             {
                 for (int y = 0; y < CubeLength; y++)
@@ -69,7 +69,7 @@ namespace Test
             AssertEqual(cube, arr);
 
             var snap = arr.TreeSnapshot();
-            Assert.IsTrue(snap.IsLeaf, "is leaf");
+            Assert.AreEqual(NodeType.Leaf, snap.Type);
         }
 
         [TestMethod]
@@ -86,7 +86,7 @@ namespace Test
             AssertEqual(identCube, arr);
 
             var snap = arr.TreeSnapshot();
-            Assert.IsTrue(snap.IsLeaf, "is leaf");
+            Assert.AreEqual(NodeType.Leaf, snap.Type);
         }
 
         private void SetAll(int[, ,] values, SparseArray3D<int> arr)

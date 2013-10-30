@@ -3,7 +3,7 @@
 namespace Sparse.Array3D
 {
 
-    class ZNode<T> : INodeInternal<T>
+    public class ZNode<T> : INodeInternal<T>
     {
         private readonly INodeInternal<T> left;
         private readonly INodeInternal<T> right;
@@ -32,7 +32,7 @@ namespace Sparse.Array3D
         }
 
 
-        public INodeInternal<T> Set(uint xlen, uint ylen, uint zlen, uint x, uint y, uint z, T item)
+        public INodeInternal<T> Set(INodeInternalFactory<T> factory, uint xlen, uint ylen, uint zlen, uint x, uint y, uint z, T item)
         {
             var nl = left;
             var nr = right;
@@ -42,54 +42,31 @@ namespace Sparse.Array3D
             // Choose which child to traverse down
             if (z < leftLen)
             {
-                nl = left.Set(xlen, ylen, leftLen, x, y, z, item);
+                nl = left.Set(factory, xlen, ylen, leftLen, x, y, z, item);
             }
             else
             {
                 uint rightLen = RightLength(xlen, ylen, zlen);
 
-                nr = right.Set(xlen, ylen, rightLen, x, y, z - leftLen, item);
+                nr = right.Set(factory, xlen, ylen, rightLen, x, y, z - leftLen, item);
             }
 
-            if (nl.IsLeaf && nr.IsLeaf)
-            {
-                // Both children are leaf nodes
-                var comparer = EqualityComparer<T>.Default;
 
-                var leftItem = nl.Get(1, 1, 1, 0, 0, 0);
-                var rightItem = nr.Get(1, 1, 1, 0, 0, 0);
-
-                // Check if both leaf-children store the same value
-                if (comparer.Equals(leftItem, rightItem))
-                {
-                    // They store the same value, this node and its children should be merged into one leaf node.
-                    // Since the leaf nodes only store the value, we can just return either one of the children and have the same effect.
-                    return nl;
-                }
-            }
-            else if (object.ReferenceEquals(nl, left) && object.ReferenceEquals(nr, right))
+            if (object.ReferenceEquals(nl, left) && object.ReferenceEquals(nr, right))
             {
                 // There was no change
                 return this;
             }
 
             // One of the children changed, transfer the changes up the tree
-            return new ZNode<T>(nl, nr);
+            return factory.Get(NodeType.Z, nl, nr);
         }
 
-        public bool IsLeaf
+        public NodeType Type
         {
             get
             {
-                return false;
-            }
-        }
-
-        public Dimension Slice
-        {
-            get
-            {
-                return Dimension.Z;
+                return NodeType.Z;
             }
         }
 

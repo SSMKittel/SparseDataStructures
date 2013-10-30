@@ -2,11 +2,6 @@
 {
     public interface INode<T>
     {
-        bool IsLeaf
-        {
-            get;
-        }
-
         INode<T> Left
         {
             get;
@@ -17,7 +12,7 @@
             get;
         }
 
-        Dimension Slice
+        NodeType Type
         {
             get;
         }
@@ -42,9 +37,18 @@
             get;
         }
 
-        uint Length(Dimension dimension);
+        uint Length(NodeType dimension);
 
         T this[uint x, uint y, uint z]
+        {
+            get;
+        }
+
+        int CountUniqueLeaves
+        {
+            get;
+        }
+        int CountUniqueNodes
         {
             get;
         }
