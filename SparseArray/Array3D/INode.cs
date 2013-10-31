@@ -2,6 +2,11 @@
 {
     public interface INode<T>
     {
+        INodeInternal<T> Internal
+        {
+            get;
+        }
+
         INode<T> Left
         {
             get;
@@ -40,15 +45,6 @@
         uint Length(NodeType dimension);
 
         T this[uint x, uint y, uint z]
-        {
-            get;
-        }
-
-        int CountUniqueLeaves
-        {
-            get;
-        }
-        int CountUniqueNodes
         {
             get;
         }
