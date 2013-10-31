@@ -1,13 +1,73 @@
 ﻿using System.Collections.Generic;
 using System;
+using System.Runtime.CompilerServices;
 
 namespace Sparse.Array3D
 {
+    class NodeComparer<T> : IEqualityComparer<INodeInternal<T>>
+    {
+        public bool Equals(INodeInternal<T> x, INodeInternal<T> y)
+        {
+            if (x.Type == y.Type)
+            {
+                if (x.Type == NodeType.Leaf)
+                {
+                    var comparer = EqualityComparer<T>.Default;
+
+                    var xItem = x.Get(1, 1, 1, 0, 0, 0);
+                    var yItem = y.Get(1, 1, 1, 0, 0, 0);
+
+                    return comparer.Equals(xItem, yItem);
+                }
+                else
+                {
+                    return object.ReferenceEquals(x.Left, y.Left) && object.ReferenceEquals(x.Right, y.Right);
+                }
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public int GetHashCode(INodeInternal<T> node)
+        {
+
+            NodeType nt = node.Type;
+            if (nt == NodeType.Leaf)
+            {
+                var comparer = EqualityComparer<T>.Default;
+
+                return comparer.GetHashCode(node.Get(1, 1, 1, 0, 0, 0));
+            }
+            else
+            {
+                unchecked
+                {
+                    int d = 31 * RuntimeHelpers.GetHashCode(node.Left) + 53 * RuntimeHelpers.GetHashCode(node.Right);
+
+                    if (nt == NodeType.X)
+                    {
+                        return 67 * d;
+                    }
+                    else if (nt == NodeType.Y)
+                    {
+                        return 89 * d;
+                    }
+                    else
+                    {
+                        return 113 * d;
+                    }
+                }
+            }
+        }
+    }
+
     [Obsolete("TODO the internal caching behaviour leaks memory like a sieve, fix it")]
     public class CachingFactory<T> : INodeInternalFactory<T>
     {
         private Dictionary<INodeInternal<T>, int> heights;
-        private Dictionary<Tuple<NodeType, INodeInternal<T>, INodeInternal<T>>, INodeInternal<T>> nodes;
+        private Dictionary<INodeInternal<T>, INodeInternal<T>> nodes;
         private Dictionary<T, INodeInternal<T>> leaves;
 
         private readonly uint maxHeight;
@@ -15,7 +75,7 @@ namespace Sparse.Array3D
         public CachingFactory(uint maxHeight)
         {
             heights = new Dictionary<INodeInternal<T>, int>();
-            nodes = new Dictionary<Tuple<NodeType, INodeInternal<T>, INodeInternal<T>>, INodeInternal<T>>();
+            nodes = new Dictionary<INodeInternal<T>, INodeInternal<T>>(new NodeComparer<T>());
             leaves = new Dictionary<T, INodeInternal<T>>();
 
             this.maxHeight = maxHeight;
@@ -84,29 +144,37 @@ namespace Sparse.Array3D
                 }
             }
 
-            var tup = new Tuple<NodeType, INodeInternal<T>, INodeInternal<T>>(type, left, right);
+            INodeInternal<T> test = Create(type, left, right);
 
             INodeInternal<T> node;
-            if (nodes.TryGetValue(tup, out node))
+            if (nodes.TryGetValue(test, out node))
             {
                 return node;
             }
             else
             {
-                if (type == NodeType.X)
-                {
-                    node = new XNode<T>(left, right);
-                }
-                else if (type == NodeType.Y)
-                {
-                    node = new YNode<T>(left, right);
-                }
-                else
-                {
-                    node = new ZNode<T>(left, right);
-                }
-                Cache(node);
-                return node;
+                Cache(test);
+                return test;
+            }
+        }
+
+        private INodeInternal<T> Create(NodeType type, INodeInternal<T> left, INodeInternal<T> right)
+        {
+            if (type == NodeType.X)
+            {
+                return new XNode<T>(left, right);
+            }
+            else if (type == NodeType.Y)
+            {
+                return new YNode<T>(left, right);
+            }
+            else if (type == NodeType.Z)
+            {
+                return new ZNode<T>(left, right);
+            }
+            else
+            {
+                throw new ArgumentException("Must not be a leaf node");
             }
         }
 
@@ -127,8 +195,7 @@ namespace Sparse.Array3D
 
                     if (newHeight <= maxHeight)
                     {
-                        var tup = new Tuple<NodeType, INodeInternal<T>, INodeInternal<T>>(node.Type, node.Left, node.Right);
-                        nodes[tup] = node;
+                        nodes[node] = node;
                         heights[node] = newHeight;
                     }
                 }
