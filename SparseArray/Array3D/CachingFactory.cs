@@ -3,24 +3,29 @@ using System;
 
 namespace Sparse.Array3D
 {
+    [Obsolete("TODO the internal caching behaviour leaks memory like a sieve, fix it")]
     public class CachingFactory<T> : INodeInternalFactory<T>
     {
         private Dictionary<INodeInternal<T>, int> heights;
         private Dictionary<Tuple<NodeType, INodeInternal<T>, INodeInternal<T>>, INodeInternal<T>> nodes;
         private Dictionary<T, INodeInternal<T>> leaves;
 
-        public CachingFactory()
+        private readonly uint maxHeight;
+
+        public CachingFactory(uint maxHeight)
         {
             heights = new Dictionary<INodeInternal<T>, int>();
             nodes = new Dictionary<Tuple<NodeType, INodeInternal<T>, INodeInternal<T>>, INodeInternal<T>>();
             leaves = new Dictionary<T, INodeInternal<T>>();
+
+            this.maxHeight = maxHeight;
         }
 
         private int GetHeight(INodeInternal<T> node)
         {
             if (node.Type == NodeType.Leaf)
             {
-                return 1;
+                return 0;
             }
             else
             {
@@ -120,7 +125,7 @@ namespace Sparse.Array3D
                 {
                     int newHeight = Math.Max(GetHeight(node.Left), GetHeight(node.Right)) + 1;
 
-                    if (newHeight <= 4)
+                    if (newHeight <= maxHeight)
                     {
                         var tup = new Tuple<NodeType, INodeInternal<T>, INodeInternal<T>>(node.Type, node.Left, node.Right);
                         nodes[tup] = node;

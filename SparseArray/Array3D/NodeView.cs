@@ -151,40 +151,11 @@ namespace Sparse.Array3D
             }
         }
 
-        private IEnumerable<INodeInternal<T>> DFS(INodeInternal<T> root)
-        {
-            yield return root;
-
-            if (root.Type != NodeType.Leaf)
-            {
-                foreach (INodeInternal<T> n in DFS(root.Left))
-                {
-                    yield return n;
-                }
-
-                foreach (INodeInternal<T> n in DFS(root.Right))
-                {
-                    yield return n;
-                }
-            }
-        }
-
-        public int CountUniqueLeaves
+        public INodeInternal<T> Internal
         {
             get
             {
-                return (from n in DFS(node)
-                        where n.Type == NodeType.Leaf
-                        select n).Distinct().Count();
-            }
-        }
-        public int CountUniqueNodes
-        {
-            get
-            {
-                return (from n in DFS(node)
-                        where n.Type != NodeType.Leaf
-                        select n).Distinct().Count();
+                return this.node;
             }
         }
     }
