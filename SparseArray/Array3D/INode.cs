@@ -2,11 +2,6 @@
 {
     public interface INode<T>
     {
-        INodeInternal<T> Internal
-        {
-            get;
-        }
-
         INode<T> Left
         {
             get;

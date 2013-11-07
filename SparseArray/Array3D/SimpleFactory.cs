@@ -7,12 +7,12 @@ namespace Sparse.Array3D
     {
         public SimpleFactory() { }
 
-        public INodeInternal<T> Get(T item)
+        private IComputedLengthNode<T> Get(T item)
         {
             return new Leaf<T>(item);
         }
 
-        public INodeInternal<T> Get(Dimension dim, INodeInternal<T> left, INodeInternal<T> right)
+        private IComputedLengthNode<T> Get(Dimension dim, IComputedLengthNode<T> left, IComputedLengthNode<T> right)
         {
             if ((left.Type == NodeType.Leaf) && (right.Type == NodeType.Leaf))
             {
@@ -47,7 +47,7 @@ namespace Sparse.Array3D
 
 
         // Create a new node split along the longest axis with leaf children of this leaf node
-        public INodeInternal<T> Split(INodeInternal<T> node, uint xlen, uint ylen, uint zlen)
+        private IComputedLengthNode<T> Split(IComputedLengthNode<T> node, uint xlen, uint ylen, uint zlen)
         {
             if (xlen >= ylen && xlen >= zlen)
             {
@@ -64,7 +64,7 @@ namespace Sparse.Array3D
         }
 
         // Return a new tree with {item} set at the specified position
-        public INodeInternal<T> WithSet(INodeInternal<T> node, uint xlen, uint ylen, uint zlen, uint x, uint y, uint z, T item)
+        private IComputedLengthNode<T> WithSet(IComputedLengthNode<T> node, uint xlen, uint ylen, uint zlen, uint x, uint y, uint z, T item)
         {
             NodeType type = node.Type;
 
@@ -152,6 +152,59 @@ namespace Sparse.Array3D
                 // One of the children changed, transfer the changes up the tree
                 return this.Get(dimension, nl, nr);
             }
+        }
+
+        private IComputedLengthNode<T> Unwrap(INode<T> node)
+        {
+            if (node == null)
+            {
+                throw new NullReferenceException();
+            }
+            else
+            {
+                NodeView<T> nv = (NodeView<T>) node;
+                // TODO Check it was created by this factory
+                return nv.Internal;
+            }
+        }
+
+        public INode<T> Get(T item, uint xlen, uint ylen, uint zlen)
+        {
+            IComputedLengthNode<T> node = this.Get(item);
+            return new NodeView<T>(node, xlen, ylen, zlen);
+        }
+
+        public INode<T> Get(Dimension dim, INode<T> left, INode<T> right)
+        {
+            var nl = this.Unwrap(left);
+            var nr = this.Unwrap(right);
+
+            var node = this.Get(dim, nl, nr);
+
+            if (dim == Dimension.X)
+            {
+                return new NodeView<T>(node, left.XLength + right.XLength, left.YLength, left.ZLength);
+            }
+            else if (dim == Dimension.Y)
+            {
+                return new NodeView<T>(node, left.XLength, left.YLength + right.YLength, left.ZLength);
+            }
+            else
+            {
+                return new NodeView<T>(node, left.XLength, left.YLength, left.ZLength + right.ZLength);
+            }
+        }
+
+        public INode<T> WithSet(INode<T> node, uint x, uint y, uint z, T item)
+        {
+            var innerNode = this.Unwrap(node);
+
+            uint xlen = node.XLength;
+            uint ylen = node.YLength;
+            uint zlen = node.ZLength;
+
+            var newTree = this.WithSet(innerNode, xlen, ylen, zlen, x, y, z, item);
+            return new NodeView<T>(newTree, xlen, ylen, zlen);
         }
     }
 }

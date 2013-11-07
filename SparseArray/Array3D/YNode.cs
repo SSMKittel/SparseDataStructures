@@ -2,12 +2,12 @@
 
 namespace Sparse.Array3D
 {
-    public class YNode<T> : INodeInternal<T>
+    internal class YNode<T> : IComputedLengthNode<T>
     {
-        private readonly INodeInternal<T> left;
-        private readonly INodeInternal<T> right;
+        private readonly IComputedLengthNode<T> left;
+        private readonly IComputedLengthNode<T> right;
 
-        public YNode(INodeInternal<T> left, INodeInternal<T> right)
+        public YNode(IComputedLengthNode<T> left, IComputedLengthNode<T> right)
         {
             this.left = left;
             this.right = right;
@@ -48,7 +48,7 @@ namespace Sparse.Array3D
             return ylen - LeftLength(xlen, ylen, zlen);
         }
 
-        public INodeInternal<T> Left
+        public IComputedLengthNode<T> Left
         {
             get
             {
@@ -56,7 +56,7 @@ namespace Sparse.Array3D
             }
         }
 
-        public INodeInternal<T> Right
+        public IComputedLengthNode<T> Right
         {
             get
             {

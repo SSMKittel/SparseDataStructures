@@ -4,9 +4,9 @@ using System.Runtime.CompilerServices;
 
 namespace Sparse.Array3D
 {
-    class NodeComparer<T> : IEqualityComparer<INodeInternal<T>>
+    class NodeComparer<T> : IEqualityComparer<IComputedLengthNode<T>>
     {
-        public bool Equals(INodeInternal<T> x, INodeInternal<T> y)
+        public bool Equals(IComputedLengthNode<T> x, IComputedLengthNode<T> y)
         {
             if (x.Type == y.Type)
             {
@@ -30,7 +30,7 @@ namespace Sparse.Array3D
             }
         }
 
-        public int GetHashCode(INodeInternal<T> node)
+        public int GetHashCode(IComputedLengthNode<T> node)
         {
 
             NodeType nt = node.Type;
@@ -66,23 +66,23 @@ namespace Sparse.Array3D
     [Obsolete("TODO the internal caching behaviour leaks memory like a sieve, fix it")]
     public class CachingFactory<T> : INodeFactory<T>
     {
-        private Dictionary<INodeInternal<T>, int> heights;
-        private Dictionary<INodeInternal<T>, INodeInternal<T>> nodes;
-        private Dictionary<T, INodeInternal<T>> leaves;
+        private Dictionary<IComputedLengthNode<T>, int> heights;
+        private Dictionary<IComputedLengthNode<T>, IComputedLengthNode<T>> nodes;
+        private Dictionary<T, IComputedLengthNode<T>> leaves;
 
         private readonly uint maxHeight;
 
         public CachingFactory(uint maxHeight)
         {
-            heights = new Dictionary<INodeInternal<T>, int>();
-            nodes = new Dictionary<INodeInternal<T>, INodeInternal<T>>(new NodeComparer<T>());
-            leaves = new Dictionary<T, INodeInternal<T>>();
+            heights = new Dictionary<IComputedLengthNode<T>, int>();
+            nodes = new Dictionary<IComputedLengthNode<T>, IComputedLengthNode<T>>(new NodeComparer<T>());
+            leaves = new Dictionary<T, IComputedLengthNode<T>>();
 
             this.maxHeight = maxHeight;
         }
 
         // Create a new node split along the longest axis with leaf children of this leaf node
-        public INodeInternal<T> Split(INodeInternal<T> node, uint xlen, uint ylen, uint zlen)
+        private IComputedLengthNode<T> Split(IComputedLengthNode<T> node, uint xlen, uint ylen, uint zlen)
         {
             if (xlen >= ylen && xlen >= zlen)
             {
@@ -99,7 +99,7 @@ namespace Sparse.Array3D
         }
 
         // Return a new tree with {item} set at the specified position
-        public INodeInternal<T> WithSet(INodeInternal<T> node, uint xlen, uint ylen, uint zlen, uint x, uint y, uint z, T item)
+        private IComputedLengthNode<T> WithSet(IComputedLengthNode<T> node, uint xlen, uint ylen, uint zlen, uint x, uint y, uint z, T item)
         {
             NodeType type = node.Type;
 
@@ -189,7 +189,7 @@ namespace Sparse.Array3D
             }
         }
 
-        private int GetHeight(INodeInternal<T> node)
+        private int GetHeight(IComputedLengthNode<T> node)
         {
             if (node.Type == NodeType.Leaf)
             {
@@ -201,7 +201,7 @@ namespace Sparse.Array3D
             }
         }
 
-        private bool IsCached(INodeInternal<T> node)
+        private bool IsCached(IComputedLengthNode<T> node)
         {
             if (node.Type == NodeType.Leaf)
             {
@@ -213,9 +213,9 @@ namespace Sparse.Array3D
             }
         }
 
-        public INodeInternal<T> Get(T item)
+        private IComputedLengthNode<T> Get(T item)
         {
-            INodeInternal<T> leaf;
+            IComputedLengthNode<T> leaf;
             if (leaves.TryGetValue(item, out leaf))
             {
                 return leaf;
@@ -228,7 +228,7 @@ namespace Sparse.Array3D
             }
         }
 
-        public INodeInternal<T> Get(Dimension dim, INodeInternal<T> left, INodeInternal<T> right)
+        private IComputedLengthNode<T> Get(Dimension dim, IComputedLengthNode<T> left, IComputedLengthNode<T> right)
         {
             if ((left.Type == NodeType.Leaf) && (right.Type == NodeType.Leaf))
             {
@@ -247,9 +247,9 @@ namespace Sparse.Array3D
                 }
             }
 
-            INodeInternal<T> test = Create(dim, left, right);
+            IComputedLengthNode<T> test = Create(dim, left, right);
 
-            INodeInternal<T> node;
+            IComputedLengthNode<T> node;
             if (nodes.TryGetValue(test, out node))
             {
                 return node;
@@ -261,7 +261,7 @@ namespace Sparse.Array3D
             }
         }
 
-        private INodeInternal<T> Create(Dimension dim, INodeInternal<T> left, INodeInternal<T> right)
+        private IComputedLengthNode<T> Create(Dimension dim, IComputedLengthNode<T> left, IComputedLengthNode<T> right)
         {
             if (dim == Dimension.X)
             {
@@ -277,7 +277,7 @@ namespace Sparse.Array3D
             }
         }
 
-        private void Cache(INodeInternal<T> node)
+        private void Cache(IComputedLengthNode<T> node)
         {
             if (node.Type == NodeType.Leaf)
             {
@@ -299,6 +299,59 @@ namespace Sparse.Array3D
                     }
                 }
             }
+        }
+
+        private IComputedLengthNode<T> Unwrap(INode<T> node)
+        {
+            if (node == null)
+            {
+                throw new NullReferenceException();
+            }
+            else
+            {
+                NodeView<T> nv = (NodeView<T>)node;
+                // TODO Check it was created by this factory
+                return nv.Internal;
+            }
+        }
+
+        public INode<T> Get(T item, uint xlen, uint ylen, uint zlen)
+        {
+            IComputedLengthNode<T> node = this.Get(item);
+            return new NodeView<T>(node, xlen, ylen, zlen);
+        }
+
+        public INode<T> Get(Dimension dim, INode<T> left, INode<T> right)
+        {
+            var nl = this.Unwrap(left);
+            var nr = this.Unwrap(right);
+
+            var node = this.Get(dim, nl, nr);
+
+            if (dim == Dimension.X)
+            {
+                return new NodeView<T>(node, left.XLength + right.XLength, left.YLength, left.ZLength);
+            }
+            else if (dim == Dimension.Y)
+            {
+                return new NodeView<T>(node, left.XLength, left.YLength + right.YLength, left.ZLength);
+            }
+            else
+            {
+                return new NodeView<T>(node, left.XLength, left.YLength, left.ZLength + right.ZLength);
+            }
+        }
+
+        public INode<T> WithSet(INode<T> node, uint x, uint y, uint z, T item)
+        {
+            var innerNode = this.Unwrap(node);
+
+            uint xlen = node.XLength;
+            uint ylen = node.YLength;
+            uint zlen = node.ZLength;
+
+            var newTree = this.WithSet(innerNode, xlen, ylen, zlen, x, y, z, item);
+            return new NodeView<T>(newTree, xlen, ylen, zlen);
         }
     }
 }
