@@ -9,7 +9,7 @@ namespace Sparse.Array3D
         private readonly uint yLength;
         private readonly uint zLength;
 
-        private INodeInternal<T> root;
+        private INode<T> root;
 
         private readonly INodeFactory<T> nodeFactory;
 
@@ -63,7 +63,7 @@ namespace Sparse.Array3D
 
             this.nodeFactory = factory;
 
-            this.root = this.nodeFactory.Get(default(T));
+            this.root = this.nodeFactory.Get(default(T), xLength, yLength, zLength);
         }
 
         // Constructor-based clone method
@@ -83,7 +83,7 @@ namespace Sparse.Array3D
 
         public void Fill(T item)
         {
-            this.root = this.nodeFactory.Get(item);
+            this.root = this.nodeFactory.Get(item, xLength, yLength, zLength);
         }
 
         private void assertBounds(uint x, uint y, uint z)
@@ -108,20 +108,20 @@ namespace Sparse.Array3D
             {
                 assertBounds(x, y, z);
 
-                return root.Get(xLength, yLength, zLength, x, y, z);
+                return root[x, y, z];
             }
             set
             {
                 assertBounds(x, y, z);
 
-                root = nodeFactory.WithSet(root, xLength, yLength, zLength, x, y, z, value);
+                root = nodeFactory.WithSet(root, x, y, z, value);
             }
         }
 
         // Get a snapshot view of the tree structure.
         public INode<T> TreeSnapshot()
         {
-            return new NodeView<T>(root, xLength, yLength, zLength);
+            return root;
         }
     }
 }

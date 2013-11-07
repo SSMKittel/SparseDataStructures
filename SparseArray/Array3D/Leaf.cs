@@ -2,7 +2,7 @@
 
 namespace Sparse.Array3D
 {
-    public class Leaf<T> : INodeInternal<T>
+    internal class Leaf<T> : IComputedLengthNode<T>
     {
         private readonly T item;
 
@@ -18,7 +18,7 @@ namespace Sparse.Array3D
         }
 
         // Create a new node split along the longest axis with leaf children of this leaf node
-        public INodeInternal<T> Split(uint xlen, uint ylen, uint zlen)
+        public IComputedLengthNode<T> Split(uint xlen, uint ylen, uint zlen)
         {
             if (xlen >= ylen && xlen >= zlen)
             {
@@ -52,7 +52,7 @@ namespace Sparse.Array3D
             return 0;
         }
 
-        public INodeInternal<T> Left
+        public IComputedLengthNode<T> Left
         {
             get
             {
@@ -60,7 +60,7 @@ namespace Sparse.Array3D
             }
         }
 
-        public INodeInternal<T> Right
+        public IComputedLengthNode<T> Right
         {
             get
             {

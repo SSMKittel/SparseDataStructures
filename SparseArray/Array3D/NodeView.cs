@@ -5,14 +5,14 @@ using System.Collections.Generic;
 namespace Sparse.Array3D
 {
     // Provides a read-only view of the internal tree structure, hiding the length whackiness by storing them in the node and creating child nodes on-demand
-    class NodeView<T> : INode<T>
+    internal class NodeView<T> : INode<T>
     {
-        private readonly INodeInternal<T> node;
+        private readonly IComputedLengthNode<T> node;
         private readonly uint xLength;
         private readonly uint yLength;
         private readonly uint zLength;
 
-        public NodeView(INodeInternal<T> node, uint xlen, uint ylen, uint zlen)
+        public NodeView(IComputedLengthNode<T> node, uint xlen, uint ylen, uint zlen)
         {
             this.node = node;
             this.xLength = xlen;
@@ -151,7 +151,7 @@ namespace Sparse.Array3D
             }
         }
 
-        public INodeInternal<T> Internal
+        public IComputedLengthNode<T> Internal
         {
             get
             {
