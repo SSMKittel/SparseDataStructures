@@ -11,10 +11,10 @@ namespace Sparse.Array3D
 
         private INodeInternal<T> root;
 
-        private readonly INodeInternalFactory<T> nodeFactory;
+        private readonly INodeFactory<T> nodeFactory;
 
         // Create a sparse array from an existing 3D array
-        public SparseArray3D(INodeInternalFactory<T> factory, T[, ,] array)
+        public SparseArray3D(INodeFactory<T> factory, T[, ,] array)
             : this(
                 factory,
                 (uint)array.GetLength(0),
@@ -40,7 +40,7 @@ namespace Sparse.Array3D
         { }
 
         // Create a sparse array of the specified dimensions
-        public SparseArray3D(INodeInternalFactory<T> factory, uint xlen, uint ylen, uint zlen)
+        public SparseArray3D(INodeFactory<T> factory, uint xlen, uint ylen, uint zlen)
         {
             if (xlen == 0)
             {
@@ -81,6 +81,11 @@ namespace Sparse.Array3D
             return new SparseArray3D<T>(this);
         }
 
+        public void Fill(T item)
+        {
+            this.root = this.nodeFactory.Get(item);
+        }
+
         private void assertBounds(uint x, uint y, uint z)
         {
             if (x >= xLength)
@@ -109,7 +114,7 @@ namespace Sparse.Array3D
             {
                 assertBounds(x, y, z);
 
-                root = root.Set(nodeFactory, xLength, yLength, zLength, x, y, z, value);
+                root = nodeFactory.WithSet(root, xLength, yLength, zLength, x, y, z, value);
             }
         }
 
