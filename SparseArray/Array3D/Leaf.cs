@@ -34,29 +34,6 @@ namespace Sparse.Array3D
             }
         }
 
-
-        public INodeInternal<T> Set(INodeInternalFactory<T> factory, uint xlen, uint ylen, uint zlen, uint x, uint y, uint z, T item)
-        {
-            var comparer = EqualityComparer<T>.Default;
-
-            if (comparer.Equals(this.item, item))
-            {
-                // Trying to set the item to the same thing
-                return this;
-            }
-            else if (xlen == 1 && ylen == 1 && zlen == 1)
-            {
-                // We have exactly one position, set the new value
-                return factory.Get(item);
-            }
-            else
-            {
-                // We need to set a new value somewhere in this node.  Split this leaf node and keep trying to find a spot
-                var node = Split(xlen, ylen, zlen);
-                return node.Set(factory, xlen, ylen, zlen, x, y, z, item);
-            }
-        }
-
         public NodeType Type
         {
             get

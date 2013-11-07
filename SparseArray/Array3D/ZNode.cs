@@ -31,37 +31,6 @@ namespace Sparse.Array3D
             }
         }
 
-
-        public INodeInternal<T> Set(INodeInternalFactory<T> factory, uint xlen, uint ylen, uint zlen, uint x, uint y, uint z, T item)
-        {
-            var nl = left;
-            var nr = right;
-
-            uint leftLen = LeftLength(xlen, ylen, zlen);
-
-            // Choose which child to traverse down
-            if (z < leftLen)
-            {
-                nl = left.Set(factory, xlen, ylen, leftLen, x, y, z, item);
-            }
-            else
-            {
-                uint rightLen = RightLength(xlen, ylen, zlen);
-
-                nr = right.Set(factory, xlen, ylen, rightLen, x, y, z - leftLen, item);
-            }
-
-
-            if (object.ReferenceEquals(nl, left) && object.ReferenceEquals(nr, right))
-            {
-                // There was no change
-                return this;
-            }
-
-            // One of the children changed, transfer the changes up the tree
-            return factory.Get(NodeType.Z, nl, nr);
-        }
-
         public NodeType Type
         {
             get
